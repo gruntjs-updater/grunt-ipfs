@@ -58,7 +58,7 @@ module.exports = function(grunt) {
       
       var childProcess = cp.exec(cmd)
 
-      childProcess.on('data', function(data) {
+      childProcess.stdout.on('data', function(data) {
         hash = data.split(' ')[1]
       });
       
