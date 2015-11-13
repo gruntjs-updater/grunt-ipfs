@@ -57,6 +57,10 @@ module.exports = function(grunt) {
       grunt.log.writeln(cmd)
       
       var childProcess = cp.exec(cmd)
+
+      childProcess.on('data', function(data) {
+        hash = data.split(' ')[1]
+      });
       
       childProcess.on('exit', function(code) {
         if (code === 1) {
