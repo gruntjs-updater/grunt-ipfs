@@ -33,11 +33,24 @@ module.exports = function(grunt) {
     addFirstPathOrDone()
 
     function addFirstPathOrDone(){
-      if(options.paths.length === 0) return done(true)
+      if(options.paths.length === 0)
+        if(options.save)
+          fs.writeFile(options.save, JSON.stringify(hashes), function(err) {
+              if(err) {
+                  grunt.log.error('Could not save to '+options.save)
+                  return done(false);
+              }
+
+              grunt.log.success('Saved to '+options.save);
+              done()
+          });
+        else
+          return done()
         
 
       var path = options.paths.shift()
         ,cmd = (options.bin+' add '+path+' '+flagStr).trim()
+        ,hash = null
       
       grunt.log.writeln(cmd)
       
@@ -48,7 +61,8 @@ module.exports = function(grunt) {
           grunt.log.error('Fail');
           return done(false);
         }else{
-          grunt.log.success('Added');
+          hashes[path] = hash
+          grunt.log.success('Added '+hash);
         }
 
         addFirstPathOrDone();
