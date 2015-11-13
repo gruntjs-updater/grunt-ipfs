@@ -11,6 +11,7 @@
 module.exports = function(grunt) {
 
   var cp = require('child_process')
+    ,fs = require('fs')
 
   grunt.registerMultiTask('ipfsadd', 'Add file/folder to ipfs', function() {
 
