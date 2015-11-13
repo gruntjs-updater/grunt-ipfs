@@ -15,7 +15,8 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('ipfsadd', 'Add file/folder to ipfs', function() {
 
     var options = this.options()
-      ,done = this.async();
+      ,done = this.async()
+      ,hashes = {}
     
     options.bin = options.bin || 'ipfs'
 
