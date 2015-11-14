@@ -37,7 +37,7 @@ module.exports = function(grunt) {
     function addFirstPathOrDone(){
       if(options.paths.length === 0)
         if(options.save)
-          fs.writeFile(options.save, JSON.stringify(hashes), function(err) {
+          return fs.writeFile(options.save, JSON.stringify(hashes), function(err) {
               if(err) {
                   grunt.log.error('Could not save to '+options.save)
                   return done(false);
