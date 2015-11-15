@@ -113,4 +113,27 @@ module.exports = function(grunt) {
     })
   })
 
+  grunt.registerMultiTask('ipfscheck',function(){
+
+    var options = this.options()
+      ,ipfsAPI = require('ipfs-api')
+      ,done = this.async()
+
+    options.domain = options.domain || 'localhost'
+    options.port = options.port || 5001
+
+    var ipfs = ipfsAPI(options.domain,options.port)
+
+    ipfs.version(function(err,res){
+      if(err || !res || !res.Version){
+        grunt.log.warn(err)
+        return done(false)
+      }
+
+      grunt.log.success('Running ipfs version '+res.Version)
+
+      return done()
+    })
+  })
+
 };

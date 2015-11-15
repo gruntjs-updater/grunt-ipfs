@@ -15,6 +15,12 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+    ipfscheck: {
+      ipfstest: {
+        options: {}
+      },
+    },
+
     ipfsget: {
       ipfstest: {
         options: {
@@ -45,5 +51,5 @@ module.exports = function(grunt) {
   });
 
   grunt.loadTasks('tasks');
-  grunt.registerTask('test', ['grunt ipfs test'], ['mkdir:ipfstest','ipfsget:ipfstest','ipfsadd:ipfstest','clean:ipfstest'])
+  grunt.registerTask('test', ['grunt ipfs test'], ['ipfscheck:ipfstest','mkdir:ipfstest','ipfsget:ipfstest','ipfsadd:ipfstest','clean:ipfstest'])
 };
