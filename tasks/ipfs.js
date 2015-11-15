@@ -10,70 +10,107 @@
 
 module.exports = function(grunt) {
 
-  var cp = require('child_process')
-    ,fs = require('fs')
+  grunt.registerMultiTask('ipfsadd', 'Add files/folders to ipfs', function() {
 
-  grunt.registerMultiTask('ipfsadd', 'Add file/folder to ipfs', function() {
-
-    var options = this.options()
+    var fs = require('fs')
+      ,ipfsAPI = require('ipfs-api')
+      ,options = this.options()
       ,done = this.async()
       ,hashes = {}
-    
-    options.bin = options.bin || 'ipfs'
 
-    if(!options.paths || options.paths.length === 0){
-      grunt.log.warn('options.paths not set or empty');
-      done(false)
+    if(!options.files || options.files.length === 0){
+      grunt.log.warn('options.files not set or empty');
+      return done(false)
     }
 
-    options.flags = options.flags || []
+    options.domain = options.domain || 'localhost'
+    options.port = options.port || 5001
 
-    var flagStr = options.flags.map(function(flag){
-      return '-'+flag
-    }).join(' ')
+    var ipfs = ipfsAPI(options.domain,options.port)
 
-    addFirstPathOrDone()
+    ipfs.add(options.files,function(err,res){
+      if(err || !res) return done(false)
 
-    function addFirstPathOrDone(){
-      if(options.paths.length === 0)
-        if(options.save)
-          return fs.writeFile(options.save, JSON.stringify(hashes), function(err) {
-              if(err) {
-                  grunt.log.error('Could not save to '+options.save)
-                  return done(false);
-              }
+      res.forEach(function(file,index) {
+        var fileName = options.files[index]
+        grunt.log.success('Added '+fileName+' as '+file.Hash)
+        hashes[fileName]=file.Hash
+      })
 
-              grunt.log.success('Saved to '+options.save);
-              done()
-          });
-        else
-          return done()
-        
+      if(options.output)
+        return fs.writeFile(options.output, JSON.stringify(hashes), function(err) {
+            if(err) {
+                grunt.log.error('Could not save to '+options.output)
+                return done(false);
+            }
 
-      var path = options.paths.shift()
-        ,cmd = (options.bin+' add '+path+' '+flagStr).trim()
-        ,hash = null
-      
-      grunt.log.writeln(cmd)
-      
-      var childProcess = cp.exec(cmd)
+            grunt.log.success('Saved to '+options.output);
+            return done()
+        });
+      else
+        return done()
+    })
 
-      childProcess.stdout.on('data', function(data) {
-        hash = data.split(' ')[1]
-      });
-      
-      childProcess.on('exit', function(code) {
-        if (code === 1) {
-          grunt.log.error('Fail');
-          return done(false);
-        }else{
-          hashes[path] = hash
-          grunt.log.success('Added '+hash);
-        }
-
-        addFirstPathOrDone();
-      });
-
-    }
   })
+
+  grunt.registerMultiTask('ipfsget', 'Get the contents of a hash and save it to a file', function() {
+
+    var options = this.options()
+      ,child = require('child_process')
+      ,fs = require('fs')
+      ,ipfsAPI = require('ipfs-api')
+      ,fs = require('fs')
+      ,done = this.async()
+
+    if(!options.hash){
+      grunt.log.warn('options.hash not set or empty');
+      return done(false)
+    }
+
+    options.domain = options.domain || 'localhost'
+    options.port = options.port || 5001
+    options.output = options.output || options.hash
+
+    var ipfs = ipfsAPI(options.domain,options.port)
+
+    ipfs.cat(options.hash, function(err, res) {
+      if(err || !res){
+        grunt.log.warn(err)
+        return done(false)
+      }
+
+      if(res.readable) {
+        // Returned as a stream
+        var repl = child.spawn('node')
+          ,file = fs.createWriteStream(options.output)
+
+        repl.stdout.pipe(process.stdout, { end: false });
+        repl.stdout.pipe(file);
+
+        process.stdin.resume();
+
+        res.pipe(repl.stdin, { end: true });
+        res.pipe(file)
+
+        res.on('data', function(chunk) {
+          file.write(chunk)
+        });
+
+        res.on('end',function(){
+          file.close()
+        });
+
+        file.on('close',function(){
+          done()
+        })
+
+      }else {
+        console.log(res)
+        // Returned as a string
+        fs.writeFile(output)
+        done()
+      }
+    })
+  })
+
 };
