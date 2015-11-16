@@ -1,6 +1,6 @@
 # grunt-ipfs
 
-> Add and get files from ipfs
+> Simple ipfs tasks for grunt
 
 ## Getting Started
 This plugin requires Grunt `~0.4.5`
