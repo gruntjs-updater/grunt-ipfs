@@ -1,7 +1,7 @@
 {
   "name": "grunt-ipfs",
   "description": "Add and get files from ipfs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "homepage": "https://github.com/aakilfernandes/grunt-ipfs",
   "author": {
     "name": "Aakil Fernandes"
