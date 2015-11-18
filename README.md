@@ -28,8 +28,8 @@ grunt.initConfig({
   ipfscheck: {
     default:{
       options: {
-        domain: 'localhost'   //optional
-        ,host: 5001           //optional
+        host: 'localhost'   //optional
+        ,port: 5001           //optional
       }
     }
   },
@@ -45,8 +45,8 @@ grunt.initConfig({
   ipfsadd: {
     default:{
       options: {
-        domain: 'localhost'       //optional
-        ,host: 5001               //optional
+        host: 'localhost'       //optional
+        ,port: 5001               //optional
         ,files:['myFile.txt']
         ,output:'hashes.json'     //optional
       }
@@ -64,8 +64,8 @@ grunt.initConfig({
   ipfsget: {
     default:{
       options: {
-        domain: 'localhost'     //optional
-        ,host: 5001             //optional
+        host: 'localhost'     //optional
+        ,port: 5001             //optional
         ,hash: 'QmeHAUST7aL9ZCyqo7JyUfPXQzPmhYV2WSmAUz7Mhk7kmG'
         ,output:'myFile.txt'    //optional, defaults to options.hash
       }
