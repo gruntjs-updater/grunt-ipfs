@@ -13,7 +13,7 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('ipfsadd', 'Add files/folders to ipfs', function() {
 
     var fs = require('fs')
-      ,ipfsAPI = require('ipfs-api')
+      ,ipfsd = require('ipfsd-ctl')
       ,options = this.options()
       ,done = this.async()
       ,hashes = {}
@@ -23,33 +23,31 @@ module.exports = function(grunt) {
       return done(false)
     }
 
-    options.host = options.host || 'localhost'
-    options.port = options.port || 5001
+    ipfsd.disposableApi(function (err, ipfs) {
+      ipfs.add(options.files,function(err,res){
+        if(err || !res) return done(false)
 
-    var ipfs = ipfsAPI(options.host,options.port)
+        res.forEach(function(file,index) {
+          var fileName = options.files[index]
+          grunt.log.success('Added '+fileName+' as '+file.Hash)
+          hashes[fileName]=file.Hash
+        })
 
-    ipfs.add(options.files,function(err,res){
-      if(err || !res) return done(false)
+        if(options.output)
+          return fs.writeFile(options.output, JSON.stringify(hashes), function(err) {
+              if(err) {
+                  grunt.log.error('Could not save to '+options.output)
+                  return done(false);
+              }
 
-      res.forEach(function(file,index) {
-        var fileName = options.files[index]
-        grunt.log.success('Added '+fileName+' as '+file.Hash)
-        hashes[fileName]=file.Hash
+              grunt.log.success('Saved to '+options.output);
+              return done()
+          });
+        else
+          return done()
       })
-
-      if(options.output)
-        return fs.writeFile(options.output, JSON.stringify(hashes), function(err) {
-            if(err) {
-                grunt.log.error('Could not save to '+options.output)
-                return done(false);
-            }
-
-            grunt.log.success('Saved to '+options.output);
-            return done()
-        });
-      else
-        return done()
     })
+
 
   })
 
@@ -58,7 +56,7 @@ module.exports = function(grunt) {
     var options = this.options()
       ,child = require('child_process')
       ,fs = require('fs')
-      ,ipfsAPI = require('ipfs-api')
+      ,ipfsd = require('ipfsd-ctl')
       ,fs = require('fs')
       ,done = this.async()
 
@@ -67,73 +65,49 @@ module.exports = function(grunt) {
       return done(false)
     }
 
-    options.host = options.host || 'localhost'
-    options.port = options.port || 5001
     options.output = options.output || options.hash
 
-    var ipfs = ipfsAPI(options.host,options.port)
+    ipfsd.disposableApi(function (err, ipfs) {
+      ipfs.cat(options.hash, function(err, res) {
+          if(err || !res){
+            grunt.log.warn(err)
+            return done(false)
+          }
 
-    ipfs.cat(options.hash, function(err, res) {
-      if(err || !res){
-        grunt.log.warn(err)
-        return done(false)
-      }
+          if(res.readable) {
+            // Returned as a stream
+            var repl = child.spawn('node')
+              ,file = fs.createWriteStream(options.output)
 
-      if(res.readable) {
-        // Returned as a stream
-        var repl = child.spawn('node')
-          ,file = fs.createWriteStream(options.output)
+            repl.stdout.pipe(process.stdout, { end: false });
+            repl.stdout.pipe(file);
 
-        repl.stdout.pipe(process.stdout, { end: false });
-        repl.stdout.pipe(file);
+            process.stdin.resume();
 
-        process.stdin.resume();
+            res.pipe(repl.stdin, { end: true });
+            res.pipe(file)
 
-        res.pipe(repl.stdin, { end: true });
-        res.pipe(file)
+            res.on('data', function(chunk) {
+              file.write(chunk)
+            });
 
-        res.on('data', function(chunk) {
-          file.write(chunk)
-        });
+            res.on('end',function(){
+              file.close()
+            });
 
-        res.on('end',function(){
-          file.close()
-        });
+            file.on('close',function(){
+              grunt.log.success('Saved the contents of '+options.hash+' to '+options.output)
+              done()
+            })
 
-        file.on('close',function(){
-          done()
+          }else {
+            console.log(res)
+            // Returned as a string
+            fs.writeFileSync(output)
+            done()
+          }
         })
-
-      }else {
-        console.log(res)
-        // Returned as a string
-        fs.writeFile(output)
-        done()
-      }
+      })
     })
-  })
-
-  grunt.registerMultiTask('ipfscheck',function(){
-
-    var options = this.options()
-      ,ipfsAPI = require('ipfs-api')
-      ,done = this.async()
-
-    options.host = options.host || 'localhost'
-    options.port = options.port || 5001
-
-    var ipfs = ipfsAPI(options.host,options.port)
-
-    ipfs.version(function(err,res){
-      if(err || !res || !res.Version){
-        grunt.log.warn(err)
-        return done(false)
-      }
-
-      grunt.log.success('Running ipfs version '+res.Version)
-
-      return done()
-    })
-  })
 
 };
