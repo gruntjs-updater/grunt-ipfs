@@ -23,10 +23,10 @@ module.exports = function(grunt) {
       return done(false)
     }
 
-    options.domain = options.domain || 'localhost'
+    options.host = options.host || 'localhost'
     options.port = options.port || 5001
 
-    var ipfs = ipfsAPI(options.domain,options.port)
+    var ipfs = ipfsAPI(options.host,options.port)
 
     ipfs.add(options.files,function(err,res){
       if(err || !res) return done(false)
@@ -67,11 +67,11 @@ module.exports = function(grunt) {
       return done(false)
     }
 
-    options.domain = options.domain || 'localhost'
+    options.host = options.host || 'localhost'
     options.port = options.port || 5001
     options.output = options.output || options.hash
 
-    var ipfs = ipfsAPI(options.domain,options.port)
+    var ipfs = ipfsAPI(options.host,options.port)
 
     ipfs.cat(options.hash, function(err, res) {
       if(err || !res){
@@ -119,10 +119,10 @@ module.exports = function(grunt) {
       ,ipfsAPI = require('ipfs-api')
       ,done = this.async()
 
-    options.domain = options.domain || 'localhost'
+    options.host = options.host || 'localhost'
     options.port = options.port || 5001
 
-    var ipfs = ipfsAPI(options.domain,options.port)
+    var ipfs = ipfsAPI(options.host,options.port)
 
     ipfs.version(function(err,res){
       if(err || !res || !res.Version){
